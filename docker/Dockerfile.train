@@ -25,4 +25,4 @@ RUN mkdir -p /app/data /app/checkpoints
 ENV CONFIG_PATH=/app/configs/training_config.yaml \
     PYTHONUNBUFFERED=1
 
-CMD ["python", "src/train.py"]
+ENTRYPOINT ["python", "src/train.py"]

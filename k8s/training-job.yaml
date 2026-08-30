@@ -1,4 +1,4 @@
-﻿apiVersion: v1
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: model-checkpoint-pvc
@@ -9,6 +9,18 @@ spec:
   resources:
     requests:
       storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: training-data-pvc
+  namespace: ml-training
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
 ---
 apiVersion: batch/v1
 kind: Job
@@ -49,4 +61,5 @@ spec:
           persistentVolumeClaim:
             claimName: model-checkpoint-pvc
         - name: data-storage
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: training-data-pvc
