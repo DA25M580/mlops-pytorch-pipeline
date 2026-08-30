@@ -1,4 +1,5 @@
-﻿import torch.nn as nn
+# ResNet-18 model for CIFAR-10 classification
+import torch.nn as nn
 from torchvision import models
 
 def get_model(architecture: str = "resnet18", num_classes: int = 10) -> nn.Module:
