@@ -1,4 +1,5 @@
-﻿apiVersion: v1
+# Kubernetes manifests for mlops-pytorch-pipeline
+apiVersion: v1
 kind: Namespace
 metadata:
   name: ml-training
