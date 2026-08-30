@@ -111,3 +111,19 @@ curl -X POST http://localhost:8080/predict -F "image=@test_image.png"
 | `CONFIG_PATH` | `/app/configs/training_config.yaml` | Training config path |
 | `CHECKPOINT_PATH` | `/app/checkpoints/classifier_v1.pt` | Checkpoint for serving |
 | `PORT` | `8080` | Server port |
+
+---
+
+## Reflection
+
+Building this pipeline gave me a hands-on look at what it actually takes to move a PyTorch model from a notebook experiment into something repeatable and deployable.
+
+**Model and training** — I chose ResNet-18 as the backbone because it is well understood and small enough to train on CIFAR-10 in reasonable time on CPU. The training loop in `src/train.py` emits JSON-line logs every epoch so metrics can be piped into any monitoring tool without extra parsing. Early stopping (`patience=3`) is configured in `configs/training_config.yaml` so a run does not waste compute once validation loss plateaus. Keeping hyperparameters in a YAML file rather than hard-coded constants was an immediate quality-of-life improvement — changing learning rate or batch size no longer requires touching Python files.
+
+**Docker** — Writing two separate Dockerfiles (one for training, one for serving) forced me to think clearly about dependency footprint. The serving image only needs FastAPI, Uvicorn, Pillow, and the model weights — it does not need the full PyTorch training stack. The multi-stage build pattern keeps the final image lean. Running the server as a non-root `appuser` and adding a `HEALTHCHECK` instruction are small steps that matter a lot in real deployments where security scanning and orchestrator liveness checks are standard requirements.
+
+**Kubernetes** — The Kubernetes manifests taught me the difference between a `Job` (run-to-completion for training) and a `Deployment` (long-running for serving). Using a `ConfigMap` to inject the checkpoint path and config location keeps the container images environment-agnostic. The `HorizontalPodAutoscaler` targeting 70 % CPU utilisation is a practical starting point — under real traffic it would need tuning against actual latency percentiles rather than raw CPU, but it demonstrates the pattern correctly.
+
+**CI/CD** — The GitHub Actions workflow runs ruff linting and the pytest suite on every push and pull-request to `main` and `develop`. Separating lint from test as two named steps makes it easy to see at a glance which check failed. The four-branch strategy (main / develop / feature / fix) kept changes reviewable in small, focused pull requests rather than a single monolithic commit.
+
+**What I would do differently** — In a production setting I would add a model-registry step (e.g. MLflow) so checkpoints are versioned independently of Docker images. I would also replace the `ClusterIP` service with a proper ingress and add Prometheus annotations to the serving deployment so request latency is observable without port-forwarding. On the CI side, the docker build step currently only verifies the image builds; adding a smoke-test (`docker run --rm … /health`) would catch import errors before they reach a cluster.
