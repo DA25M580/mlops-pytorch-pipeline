@@ -1,4 +1,4 @@
-﻿apiVersion: v1
+apiVersion: v1
 kind: ConfigMap
 metadata:
   name: training-config
@@ -14,10 +14,10 @@ data:
       dataset: cifar10
 
     training:
-      epochs: 30
+      epochs: 10
       batch_size: 64
       learning_rate: 0.001
-      early_stopping_patience: 5
+      early_stopping_patience: 3
 
     output:
       checkpoint_dir: /app/checkpoints

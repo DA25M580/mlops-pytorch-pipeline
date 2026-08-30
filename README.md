@@ -1,4 +1,4 @@
-﻿# mlops-pytorch-pipeline
+# mlops-pytorch-pipeline
 
 A production-style ML pipeline that trains and serves a ResNet-18 image classifier on CIFAR-10 using Docker and Kubernetes.
 
